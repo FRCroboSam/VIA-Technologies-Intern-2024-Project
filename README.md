@@ -1,4 +1,4 @@
-# VIA-Technologies-Intern-2024-Samuel
+# VIA-Technologies-Intern-2024-Project
 2025 VIA Technologies Edge AI Intern code for performing plant leaf detection, segmentation, and disease detection 
 for Debian AI Transforma boards. 
 
