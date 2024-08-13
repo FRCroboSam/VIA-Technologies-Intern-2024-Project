@@ -180,12 +180,19 @@ def resize_bbox_img_to_square(bbox, bbox_image):
     return bbox_image
     
 def get_all_bounding_boxes(image, model):
-    detect_img, detect_result = leaf_detect(image.copy(), model)
+    print("BEFORE")
+    print(image.shape)
+    image = cv2.resize(image, (640, 640))
+    print(image.shape)
+
+    detect_img, detect_result = leaf_detect(image, model)
 
     bbox_images = []
     bboxes = []
 
-    copy = image.copy()
+    copy = image
+    print("STARTING THE DETECT")
+    print(copy.shape)
     for r in detect_result:
         for box in r.boxes:
             bbox = box.xywh.tolist()[0]
@@ -200,6 +207,8 @@ def get_all_bounding_boxes(image, model):
             bbox_image =  image[min_y:max_y, min_x:max_x]
             bbox_image = resize_bbox_img_to_square(bbox, bbox_image)
             bbox_image = cv2.resize(bbox_image, (128, 128))
+            new_bbox = [min_x, min_y, w, h]
+            printBbox(new_bbox)
             bboxes.append([min_x, min_y, w, h])
             bbox_images.append(bbox_image)
     return detect_img, bbox_images, bboxes
@@ -308,20 +317,26 @@ def find_last_root_contour(hierarchy):
             last_root_index = i
     
     return last_root_index
-
+def printBbox(bbox):
+    print("PRINTING BBOX FOIJKL")
+    print("X: " + str(bbox[0]))
+    print("Y: " + str(bbox[1]))
+    print("WIDTH: " + str(bbox[2]))
+    print("HEIGHT: " + str(bbox[3]))
 def resize_mask_to_bbox(bbox, bbox_img, mask):
 
     x, y, w, h = bbox
-
+    printBbox(bbox)
     resized_mask = np.repeat(mask, 3, axis=2)  # Shape: (128, 128, 3)
 
-    resized_mask = np.zeros((128, 128, 3)) + np.array(resized_mask)
-    final_mask = np.ones((128, 128, 1))
+    resized_mask = np.zeros((resized_mask.shape[0], resized_mask.shape[1], 3)) + np.array(resized_mask)
+    final_mask = np.ones((640, 640, 1))
 
     actual_final_shape = final_mask[y:y+h, x:x+w].shape
 
     w = actual_final_shape[1]
     h = actual_final_shape[0]
+    print(actual_final_shape)
 
     if (w > h):
         #resize it to be the version with padding added to make it a square
@@ -370,15 +385,19 @@ def return_prediction_for_image(img_path, bbox_model, mask_only_model, mask_back
 
     bbox = [0, 0, 128, 128]
     if(image.shape != (128, 128, 3) or image.shape != (1, 128, 128, 3)):
-        image = normalize_img(image) 
+        image = cv2.resize(image, (640, 640)) #normalize_img(image) 
         if bbox_model is not None:
             detect_img, bbox_images, bboxes = get_all_bounding_boxes(image.copy(), bbox_model)
+            for bbox in bboxes:
+                print("SHOWING THE BOXES")
+                print("X: " + str(bbox[0]))
+                print("Y: " + str(bbox[1]))
+                print("W: " + str(bbox[2]))
+                print("H: " + str(bbox[3]))
+                print()
 
-            prediction, confidence = return_prediction(mask_disease_model, image)
-            
-            color = (255, 0, 0)
-            if(prediction == "healthy"):
-                color = (0, 255, 0)
+            print("Image SHape")
+            print(image.shape)
             if(mask_background_model is not None):
                 masks = []
                 resized_masks = []
@@ -386,6 +405,7 @@ def return_prediction_for_image(img_path, bbox_model, mask_only_model, mask_back
                     mask = mask_only_model.predict(bbox_img[tf.newaxis, ...] / 255)    
                     mask = create_mask(mask)
                     mask, original_mask = resize_mask_to_bbox(bbox, bbox_img, mask)
+                    print(original_mask.shape)
                     masks.append(mask)
                     resized_masks.append(original_mask)
                 print("NUM BBOX IMAGES ACTUAL: " + str(len(bbox_images)))
@@ -504,7 +524,7 @@ def test_accuracy(directory, num_images, leaf_detect_model, mask_only_model,
                         predictions = []
                         confidences = []
                         
-                        image = normalize_img(image)
+                        #image = normalize_img(image)
                 
                         image1, prediction1, confidence1, accuracy = return_prediction_for_image(item_path, leaf_detect_model, mask_only_model,
                                                                                                  mask_background_model, mask_and_predict_model, 
@@ -515,20 +535,20 @@ def test_accuracy(directory, num_images, leaf_detect_model, mask_only_model,
                         predictions.append(prediction1)
                         confidences.append(confidence1)
                         
-                        image2, prediction2, confidence2, accuracy = return_prediction_for_image(item_path, None, None, None,  disease_only_model,
-                                                                                                 item)
-                        disease_only_accuracy += accuracy
-                        images.append(image2)
-                        predictions.append(prediction2)
-                        confidences.append(confidence2)
+                        # image2, prediction2, confidence2, accuracy = return_prediction_for_image(item_path, None, None, None,  disease_only_model,
+                        #                                                                          item)
+                        # disease_only_accuracy += accuracy
+                        # images.append(image2)
+                        # predictions.append(prediction2)
+                        # confidences.append(confidence2)
 
 
-                        image3, prediction3, confidence3, accuracy = return_prediction_for_image(item_path, leaf_detect_model, None, None,
-                                                                                                 disease_only_model, item)
-                        detect_and_disease_accuracy += accuracy
-                        images.append(image3)
-                        predictions.append(prediction3)
-                        confidences.append(confidence3)
+                        # image3, prediction3, confidence3, accuracy = return_prediction_for_image(item_path, leaf_detect_model, None, None,
+                        #                                                                          disease_only_model, item)
+                        # detect_and_disease_accuracy += accuracy
+                        # images.append(image3)
+                        # predictions.append(prediction3)
+                        # confidences.append(confidence3)
                         
                         if(total_leaves < 40):
                             show_images(names, images, predictions, confidences, item)
