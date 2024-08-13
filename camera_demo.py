@@ -494,10 +494,15 @@ masking_model_path = 'for_yolo_v2.keras'
 disease_predict_model_path = 'detection.keras'
 
 leaf_detect_model = YOLO(leaf_detect_model_path)
+if os.path.exists(disease_predict_model_path):
+    print("THE PATH EXISTS")
+
+disease_predict_model = tf.keras.models.load_model(disease_predict_model_path)
 masking_model = tf.keras.models.load_model(masking_model_path)
 
 
-disease_predict_model = tf.keras.models.load_model(disease_predict_model_path)
+#virtual environment
+
 
 IMG_SHAPE = (128, 128, 3)
 base_learning_rate = 0.001
