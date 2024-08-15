@@ -182,12 +182,19 @@ def resize_bbox_img_to_square(bbox, bbox_image):
     return bbox_image
     
 def get_all_bounding_boxes(image, model):
-    detect_img, detect_result = leaf_detect(image.copy(), model)
+    # print("BEFORE")
+    # print(image.shape)
+    # #image = cv2.resize(image, (640, 480))
+    # print(image.shape)
+
+    detect_img, detect_result = leaf_detect(image, model)
 
     bbox_images = []
     bboxes = []
 
-    copy = image.copy()
+    copy = image
+    # print("STARTING THE DETECT")
+    # print(copy.shape)
     for r in detect_result:
         for box in r.boxes:
             bbox = box.xywh.tolist()[0]
@@ -198,10 +205,14 @@ def get_all_bounding_boxes(image, model):
             max_y = int(round(y + 0.5 * h))
             min_x = int(round(x - 0.5 * w))
             max_x = int(round(x + 0.5 * w))
+            # w = min(w, 640 - min_x)
+            # h = min(h, 480 - min_y)
 
             bbox_image =  image[min_y:max_y, min_x:max_x]
             bbox_image = resize_bbox_img_to_square(bbox, bbox_image)
             bbox_image = cv2.resize(bbox_image, (128, 128))
+            new_bbox = [min_x, min_y, w, h]
+            # printBbox(new_bbox)
             bboxes.append([min_x, min_y, w, h])
             bbox_images.append(bbox_image)
     return detect_img, bbox_images, bboxes
@@ -235,8 +246,8 @@ def label_image_with_multiple_bbox(image, disease_predict_model, bbox_images, bb
     labeled_image = image.copy()
     # predictions = []
     # confidences = []
-    print("NUM PREDICTIONS ACTUAL: " + str(len(predictions)))
-    print("NUM BBOXES: " + str(len(bbox_images)))
+    # print("NUM PREDICTIONS ACTUAL: " + str(len(predictions)))
+    # print("NUM BBOXES: " + str(len(bbox_images)))
 
     if(len(predictions) == 0):
         for bbox_image in bbox_images:
@@ -283,7 +294,7 @@ def label_image(image, prediction, confidence, bbox):
         color = (0, 255, 0)
 
     # Draw rectangle
-    labeled_image = cv2.rectangle(labeled_image, (x, y), (x + width, y + height), color, 1)
+    labeled_image = cv2.rectangle(labeled_image, (x, y), (x + width, y + height), color, 2)
 
     # Prepare label text
     label_text = f'{prediction} ({confidence:.2f})'
@@ -310,20 +321,28 @@ def find_last_root_contour(hierarchy):
             last_root_index = i
     
     return last_root_index
-
+def printBbox(bbox):
+    print("PRINTING BBOX FOIJKL")
+    print("X: " + str(bbox[0]))
+    print("Y: " + str(bbox[1]))
+    print("WIDTH: " + str(bbox[2]))
+    print("HEIGHT: " + str(bbox[3]))
 def resize_mask_to_bbox(bbox, bbox_img, mask):
 
     x, y, w, h = bbox
-
+    # printBbox(bbox)
     resized_mask = np.repeat(mask, 3, axis=2)  # Shape: (128, 128, 3)
 
-    resized_mask = np.zeros((128, 128, 3)) + np.array(resized_mask)
-    final_mask = np.ones((128, 128, 1))
-
+    resized_mask = np.zeros((resized_mask.shape[0], resized_mask.shape[1], 3)) + np.array(resized_mask)
+    final_mask = np.ones((IMG_SHAPE[0], IMG_SHAPE[1], 1))
+    # print("FINAL MASK SHAPE")
+    # print(final_mask.shape)
     actual_final_shape = final_mask[y:y+h, x:x+w].shape
 
     w = actual_final_shape[1]
     h = actual_final_shape[0]
+    # print("ACTUAL FINAL SHAPE")
+    # print(actual_final_shape)
 
     if (w > h):
         #resize it to be the version with padding added to make it a square
@@ -360,6 +379,8 @@ def resize_mask_to_bbox(bbox, bbox_img, mask):
 
     final_mask[y:y+h, x:x+w] = resized_mask
     original_size_mask = resized_mask
+    # print("RESIZED MASK SHAPE")
+    # print(resized_mask.shape)
     return final_mask, original_size_mask
 
     # bboxes.append([min_x, min_y, max_x, max_y])
@@ -367,16 +388,14 @@ def return_prediction_for_image(image, bbox_model, mask_only_model, mask_backgro
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     bbox = [0, 0, 128, 128]
+    prediction = ''
+    confidence = 0
     if(image.shape != (128, 128, 3) or image.shape != (1, 128, 128, 3)):
-        image = normalize_img(image) 
+        #image = normalize_img(image) 
         if bbox_model is not None:
             detect_img, bbox_images, bboxes = get_all_bounding_boxes(image.copy(), bbox_model)
 
-            prediction, confidence = return_prediction(mask_disease_model, image)
-            
-            color = (255, 0, 0)
-            if(prediction == "healthy"):
-                color = (0, 255, 0)
+        
             if(mask_background_model is not None):
                 masks = []
                 resized_masks = []
@@ -386,12 +405,12 @@ def return_prediction_for_image(image, bbox_model, mask_only_model, mask_backgro
                     mask, original_mask = resize_mask_to_bbox(bbox, bbox_img, mask)
                     masks.append(mask)
                     resized_masks.append(original_mask)
-                print("NUM BBOX IMAGES ACTUAL: " + str(len(bbox_images)))
+                # print("NUM BBOX IMAGES ACTUAL: " + str(len(bbox_images)))
                 predictions, confidences = return_predictions(bbox_images, mask_disease_model)
-                print("NUM PREDICTIONS ACTUAL BEFORE MASK: " + str(len(predictions)))
+                # print("NUM PREDICTIONS ACTUAL BEFORE MASK: " + str(len(predictions)))
 
                 image = overlay_multiple_masks(resized_masks, bboxes, bbox_images, image, predictions)
-                print("NUM PREDICTIONS ACTUAL AFTER MASK: " + str(len(predictions)))
+                # print("NUM PREDICTIONS ACTUAL AFTER MASK: " + str(len(predictions)))
 
                 # image = overlay_mask_on_image(mask, image, color)
                 image = label_image_with_multiple_bbox(image, 
@@ -400,7 +419,6 @@ def return_prediction_for_image(image, bbox_model, mask_only_model, mask_backgro
 
             else:
                 # image = detect_img
-                print("NOT ACTUAL")
                 predictions = []
                 confidences = []
                 image = label_image_with_multiple_bbox(image, 
@@ -419,16 +437,13 @@ def return_prediction_for_image(image, bbox_model, mask_only_model, mask_backgro
 def show_images(names, images, predictions, confidences, correct):
     num_images = len(images)
     plt.figure(figsize=(15, 5))  # Adjust the figure size as needed
-    
-    for i in range(num_images):
-        name = names[0]
-        plt.subplot(1, num_images, i + 1)
-        if(images[i].shape != (128, 128, 3)):
-            normalize_img(images[i])
-        plt.imshow(tf.keras.utils.array_to_img((images[i])))
-        plt.title(f'Prediction: {predictions[i]}, Correct: {correct} \nConfidence: {confidences[i]:.2f}')
-        plt.axis('off')  # Hide the axes
-        save_image(name, plt)
+    name = names[0] + ".jpg"
+    image = images[0]
+    image = tf.keras.utils.array_to_img(image)
+
+    file_path = os.path.join('leaf_detect_results', name)
+
+    image.save(file_path)
 
 
     plt.tight_layout()
@@ -436,11 +451,14 @@ def show_images(names, images, predictions, confidences, correct):
 def overlay_multiple_masks(masks, bboxes, bbox_imgs, original_image, predictions, color=[0, 255, 0], alpha=0.4):
     for mask, bbox, bbox_img, prediction in zip(masks, bboxes, bbox_imgs, predictions):
         x, y, w, h = bbox 
+        #printBbox(bbox)
         if(prediction == "healthy"):
             color = [0, 255, 0]
         else:
             color = [255, 0, 0]
         bbox_img = original_image[y:y+h, x: x+w]
+        # print("BBOX IMG SHAPE")
+        # print(bbox_img.shape)
         bbox_img = overlay_mask_on_image(mask, bbox_img, color)
         original_image[y:y+h, x: x+w] = bbox_img
 
@@ -469,40 +487,49 @@ def save_image(name, plt):
     file_path = os.path.join('leaf_detect_results', name)
     plt.savefig(file_path)
 
-def perform_detection(video_frame, leaf_detect_model, mask_only_model, 
+def perform_detection(video_frame, frame_num, leaf_detect_model, mask_only_model, 
                   mask_background_model, mask_and_predict_model, disease_only_model):   
-    image = cv2.imread(video_frame)
+    image = video_frame
+
     if image is None:
         print(f"Error: Unable to read image from video frame")
     else:
+        names = [str(frame_num)]
         predictions = []
         confidences = []
         images = []
-        image = normalize_img(image)
-
-        image1, prediction1, confidence1, accuracy = return_prediction_for_image(image, leaf_detect_model, mask_only_model,
+        image1, prediction1, confidence1 = return_prediction_for_image(image, leaf_detect_model, mask_only_model,
                                                                                     mask_background_model, mask_and_predict_model, 
                                                                                     )
         images.append(image1)
-        show_images(images, predictions, confidences)
+        predictions.append(prediction1)
+        show_images(names, images, predictions, confidences, 0)
+
+def evaluate_accuracy():
+    print("TOTAL CORRECT: " + str(total_accuracy) + " Out of: " + str(total_leaves))
+    print("DISEASE ONLY CORRECT: " + str(disease_only_accuracy) + " Out of: " + str(total_leaves))
+    print("Detect And Disease Accuracy " + str(detect_and_disease_accuracy ) + " Out of: " + str(total_leaves))
+
+def main(video_frame, frame_num):
+    IMG_SHAPE = (video_frame[1], video_frame[0], 3)
+    base_learning_rate = 0.001
+
+    perform_detection(video_frame, frame_num, leaf_detect_model, masking_model, mask_background_model,
+                      mask_and_predict_model, disease_predict_model)
+    
 
 
-leaf_detect_model_path = 'best.pt'
+leaf_detect_model_path = 'runs/detect/train59/weights/best.pt'
 
 masking_model_path = 'for_yolo_v2.keras'
 
-disease_predict_model_path = 'detection.keras'
+disease_predict_model_path = 'trained_models/disease_detect_models/detection.keras'
 
 leaf_detect_model = YOLO(leaf_detect_model_path)
-if os.path.exists(disease_predict_model_path):
-    print("THE PATH EXISTS")
-
-disease_predict_model = tf.keras.models.load_model(disease_predict_model_path)
 masking_model = tf.keras.models.load_model(masking_model_path)
 
 
-#virtual environment
-
+disease_predict_model = tf.keras.models.load_model(disease_predict_model_path)
 
 IMG_SHAPE = (128, 128, 3)
 base_learning_rate = 0.001
@@ -510,20 +537,31 @@ base_learning_rate = 0.001
 mask_background_model = build_mask_and_disease_model_pipeline(masking_model, disease_predict_model, IMG_SHAPE, base_learning_rate,True)
 mask_and_predict_model = build_mask_and_disease_model_pipeline(masking_model, disease_predict_model, IMG_SHAPE, base_learning_rate, False)
 
-cap = cv2.VideoCapture(0)
-cap.set(3, 640)
-cap.set(4, 480)
-cap.set(10, 100)
+cap = cv2.VideoCapture("IMG_9954.MOV")
+print("GOT VIDEO CAPTURE")
+
+frame_num = 0
+
+if(os.path.exists('leaf_detect_results')):
+    shutil.rmtree('leaf_detect_results')
+os.makedirs('leaf_detect_results')
+IMG_SHAPE = (2160, 3840, 3)
+
 while True:
     result, video_frame = cap.read()
-    print(video_frame)
-    
-    perform_detection(video_frame, leaf_detect_model, masking_model, mask_background_model,
-                      mask_and_predict_model, disease_predict_model)
-    cv2.imshow("VIA Disease Detect Video Demo", video_frame)
-
-    if(cv2.waitKey(1) & 0xFF == ord("q")):
-        break
+    # video_frame = cv2.resize(video_frame, (640, 480))
+    # print(video_frame.shape)
+    # image = tf.keras.utils.array_to_img(video_frame)
+    # file_path = os.path.join('leaf_detect_results', 'frame' + str(frame_num) + '.jpg')
+    # image.save(file_path)
+    main(video_frame, 'frame' + str(frame_num))
+    frame_num += 1
+    # cv2.imshow("VIA Disease Detect Video Demo", video_frame)
+    # cv2.waitKey()
+    # if(cv2.waitKey(1) & 0xFF == ord("q")):
+    #     break
 
 cap.release()
 cv2.destroyAllWindows()
+
+
