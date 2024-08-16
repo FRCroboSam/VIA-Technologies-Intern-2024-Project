@@ -29,11 +29,19 @@ import os
 import numpy as np 
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import pathlib
+import onnx
+from onnx_tf.backend import prepare
 
 
 img_height = 128
 img_width = 128
-
+def convert_yolo_to_saved_model(model):
+    #load onnx model, can try tflite too 
+    model.export(format="onnx")
+    onnx_model = onnx.load("onnx_path")  # load onnx model
+    tf_rep = prepare(onnx_model)  # prepare tf representation
+    tf_rep.export_graph("output_path")  # export the model
+    
 def load_image(image_path, mask_path):
     image_path = image_path.numpy().decode('utf-8')
     mask_path = mask_path.numpy().decode('utf-8')
