@@ -3,10 +3,11 @@ Code, models for plant leaf Image Detection, Image Segmentation, and Disease Det
 the Debian AI Transforma boards. 
 
 ### Video Demo
-https://github.com/user-attachments/assets/b4b621ca-fce5-4a11-9410-93b540d73a87
 
+Model Image Detection, Image Segmentation, disease detection demo on live video. 
+https://github.com/user-attachments/assets/bdcdc902-1b9a-4088-8076-686b1e552d6b
 
-Green bounding boxes means healthy, red means disease. Colored masks are also applied onto leaves,
+Green bounding boxes means healthy, red means disease. Corresponding colored masks are also applied onto leaves,
 making it easier to detect which ones have disease. 
 
 ## YOLOv8 Leaf Detection and MobileNet Image Segmentation Pipleine
