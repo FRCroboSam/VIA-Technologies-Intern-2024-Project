@@ -3,7 +3,8 @@ Code, models for plant leaf Image Detection, Image Segmentation, and Disease Det
 the Debian AI Transforma boards. 
 
 ### Video Demo
-https://github.com/user-attachments/assets/9a043daf-aefc-4421-b68b-c91381c49de8
+https://github.com/user-attachments/assets/b4b621ca-fce5-4a11-9410-93b540d73a87
+
 
 Green bounding boxes means healthy, red means disease. Colored masks are also applied onto leaves,
 making it easier to detect which ones have disease. 
