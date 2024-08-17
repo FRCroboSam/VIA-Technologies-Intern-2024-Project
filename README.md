@@ -5,6 +5,7 @@ the Debian AI Transforma boards.
 ### Video Demo
 
 Model Image Detection, Image Segmentation, disease detection demo on live video. 
+
 https://github.com/user-attachments/assets/bdcdc902-1b9a-4088-8076-686b1e552d6b
 
 Green bounding boxes means healthy, red means disease. Corresponding colored masks are also applied onto leaves,
