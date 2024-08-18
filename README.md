@@ -1,6 +1,15 @@
 # VIA-Technologies-Intern-2024-Project
-2025 VIA Technologies Edge AI Intern code for performing plant leaf detection, segmentation, and disease detection 
-for Debian AI Transforma boards, meant to be deployed on smart home devices. 
+Code, models for plant leaf Image Detection, Image Segmentation, and Disease Detection deployed on
+the Debian AI Transforma boards. 
+
+### Video Demo
+
+Model Image Detection, Image Segmentation, disease detection demo on live video. 
+
+https://github.com/user-attachments/assets/bdcdc902-1b9a-4088-8076-686b1e552d6b
+
+Green bounding boxes means healthy, red means disease. Corresponding colored masks are also applied onto leaves,
+making it easier to detect which ones have disease. 
 
 ## YOLOv8 Leaf Detection and MobileNet Image Segmentation Pipleine
 Process: First, the YOLO model detects the leaves, and then we pass the detected area into 
