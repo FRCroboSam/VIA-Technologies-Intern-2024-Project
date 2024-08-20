@@ -24,4 +24,6 @@ Run yolov8_intquantization.py, located in demo_scripts/model_conversion of this 
 ### MDLA
 MDLA is Mediatek's format for machine learning models to run on the VIA Transforma Board. 
 
-Run the MDLA conversion command to convert from .tflite into .mdla so the model can be run on the VIA Transforma board. 
+Run the MDLA conversion command to convert from .tflite into .mdla so the model can be run on the VIA Transforma board.
+
+ncc-tflite —arch mdla3.0 —opt-accuracy —relax-fp32 -O 3 model.tflite -o model.mdla
