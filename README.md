@@ -1,5 +1,5 @@
 # VIA-Technologies-Intern-2024-Project
-Code, models for plant leaf Image Detection, Image Segmentation, and Disease Detection deployed on
+This repository contains the code for deploying and setting up plant leaf Image Detection, Image Segmentation, and Disease Detection models deployed on
 the Debian AI Transforma boards. 
 
 ### Video Demo
@@ -12,11 +12,11 @@ Green bounding boxes means healthy, red means disease. Corresponding colored mas
 making it easier to detect which ones have disease. 
 
 ## YOLOv8 Leaf Detection and MobileNet Image Segmentation Pipleine
-Process: First, the YOLO model detects the leaves, and then we pass the detected area into 
+The YOLO model detects the leaves, returning the detected area into 
 the image segmentation model. The segmentation model processes the image, leaving only areas with the
 leave intact and making the rest of the image black, feeding it into the disease detection model which returns the plant's disease.  
 
-FOr our visualization, we overlay the detected bounding boxes, image masks (red if diseased, green if healthy), and sometimes display the name of the disease. Below our results on different types of images. 
+For the visualization, we overlay the detected bounding boxes, image masks (red if diseased, green if healthy), and sometimes display the name of the disease. Below our results on different types of images. 
 
 ### Results on Images from the Plant Village Dataset
 ![image](https://github.com/user-attachments/assets/5b74cf1e-e90b-44eb-99e2-7cfd94df6110)
